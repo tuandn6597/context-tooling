@@ -130,7 +130,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
+          # Stage only the generated artifacts. A broad `git add -A` would leak
+          # the tooling checkout (context-tooling/ gitlink) and stray folders
+          # into the brand repo.
+          git add data CONTEXT.md INDEX.md RUNS.md 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
