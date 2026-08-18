@@ -16,7 +16,7 @@ name: refresh-all-brands
 
 on:
   schedule:
-    - cron: '0 6 * * 1' # every Monday 06:00 UTC — single point of truth
+    - cron: '21 9 * * *' # TEST one-shot 2026-08-18 09:21 UTC — revert to '0 6 * * 1'
   workflow_dispatch:
     inputs:
       sources:
