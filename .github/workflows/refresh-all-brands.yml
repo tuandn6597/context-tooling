@@ -17,7 +17,6 @@ name: refresh-all-brands
 on:
   schedule:
     - cron: '*/5 * * * *' # TEMP test: every 5 min (revert to weekly Monday before submission)
-      timezone: 'Asia/Ho_Chi_Minh'
   workflow_dispatch:
     inputs:
       sources:
