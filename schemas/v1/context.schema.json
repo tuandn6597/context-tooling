@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context-tooling.invalid/schemas/v1/context.schema.json",
+  "title": "Brand context summary",
+  "description": "The machine-readable summary that generateContext renders into CONTEXT.md. Kept as a schema so the markdown generator fails loudly if a source is missing or malformed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["brand", "period", "generatedForIsoWeek", "sources"],
+  "properties": {
+    "brand": { "type": "string" },
+    "period": { "type": "string" },
+    "generatedForIsoWeek": { "type": "string" },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "stale"],
+        "properties": {
+          "status": { "type": "string" },
+          "stale": { "type": "boolean" },
+          "latestPeriod": { "type": ["string", "null"] },
+          "error": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

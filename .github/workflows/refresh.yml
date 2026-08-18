@@ -1,0 +1,139 @@
+name: refresh-context
+
+# Reusable workflow (Option B). A brand repo calls this with `uses:` + `secrets: inherit`.
+# The brand repo is checked out at the workspace root (where `data/` lives), and this
+# tooling repo is checked out into `context-tooling/`.
+on:
+  workflow_call:
+    inputs:
+      brand:
+        required: true
+        type: string
+        description: 'Brand slug, e.g. nanorevive'
+      sources:
+        required: false
+        type: string
+        default: 'all'
+        description: 'Comma-separated sources, or "all"'
+      period:
+        required: false
+        type: string
+        default: ''
+        description: 'ISO week (blank = current week)'
+      fixture_all:
+        required: false
+        type: boolean
+        default: false
+        description: 'Run live-capable sources (shopify, reddit) in fixture mode too'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout brand repo (data lives here)
+        uses: actions/checkout@v4
+
+      - name: Checkout context-tooling
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/context-tooling
+          path: context-tooling
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install tooling dependencies
+        working-directory: context-tooling
+        run: npm ci
+
+      # One step per source so a failing source never loses the others.
+      - name: Extract shopify
+        id: shopify
+        continue-on-error: true
+        working-directory: context-tooling
+        run: npm run extract -- --brand=${{ inputs.brand }} --source=shopify --period="${{ inputs.period }}" --out=..
+        env:
+          FIXTURE_MODE: ${{ inputs.fixture_all && '1' || '0' }}
+          SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+
+      - name: Extract reddit
+        id: reddit
+        continue-on-error: true
+        working-directory: context-tooling
+        run: npm run extract -- --brand=${{ inputs.brand }} --source=reddit --period="${{ inputs.period }}" --out=..
+        env:
+          FIXTURE_MODE: ${{ inputs.fixture_all && '1' || '0' }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+
+      - name: Extract converge (stub)
+        id: converge
+        continue-on-error: true
+        working-directory: context-tooling
+        run: npm run extract -- --brand=${{ inputs.brand }} --source=converge --period="${{ inputs.period }}" --out=..
+        env:
+          FIXTURE_MODE: '1'
+
+      - name: Extract richpanel (stub)
+        id: richpanel
+        continue-on-error: true
+        working-directory: context-tooling
+        run: npm run extract -- --brand=${{ inputs.brand }} --source=richpanel --period="${{ inputs.period }}" --out=..
+        env:
+          FIXTURE_MODE: '1'
+
+      - name: Extract aircall (stub)
+        id: aircall
+        continue-on-error: true
+        working-directory: context-tooling
+        run: npm run extract -- --brand=${{ inputs.brand }} --source=aircall --period="${{ inputs.period }}" --out=..
+        env:
+          FIXTURE_MODE: '1'
+
+      - name: Generate context and index
+        if: always()
+        working-directory: context-tooling
+        run: |
+          npm run generate:context -- --brand=${{ inputs.brand }} --period="${{ inputs.period }}" --out=..
+          npm run generate:index -- --brand=${{ inputs.brand }} --period="${{ inputs.period }}" --out=..
+
+      - name: Validate all data against schemas
+        if: always()
+        working-directory: context-tooling
+        run: npm run validate:schema -- --brand=${{ inputs.brand }} --out=..
+
+      - name: Write step summary
+        if: always()
+        run: |
+          {
+            echo "## Refresh summary — ${{ inputs.brand }}"
+            echo ""
+            echo "| Source | Outcome |"
+            echo "|---|---|"
+            echo "| shopify | ${{ steps.shopify.outcome }} |"
+            echo "| reddit | ${{ steps.reddit.outcome }} |"
+            echo "| converge | ${{ steps.converge.outcome }} |"
+            echo "| richpanel | ${{ steps.richpanel.outcome }} |"
+            echo "| aircall | ${{ steps.aircall.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit and push
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore(context): refresh ${{ inputs.period || 'current' }} [brand=${{ inputs.brand }} shopify=${{ steps.shopify.outcome }} reddit=${{ steps.reddit.outcome }} converge=${{ steps.converge.outcome }} richpanel=${{ steps.richpanel.outcome }} aircall=${{ steps.aircall.outcome }}]"
+            git push
+          fi

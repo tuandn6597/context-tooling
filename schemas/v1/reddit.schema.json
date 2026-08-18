@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context-tooling.invalid/schemas/v1/reddit.schema.json",
+  "title": "Reddit voice-of-customer rollup",
+  "description": "Brand/category keyword mention rollups plus post links only. Full comment text is NOT stored (Reddit ToS restricts bulk archiving).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mentions", "byKeyword", "posts"],
+  "properties": {
+    "mentions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "byKeyword": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["keyword", "mentions"],
+        "properties": {
+          "keyword": { "type": "string" },
+          "mentions": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "posts": {
+      "type": "array",
+      "description": "Rollup + link only; no author, no body text.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "subreddit", "title", "url", "createdUtc", "score"],
+        "properties": {
+          "id": { "type": "string" },
+          "subreddit": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "createdUtc": { "type": "integer" },
+          "score": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

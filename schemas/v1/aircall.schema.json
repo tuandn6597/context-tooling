@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context-tooling.invalid/schemas/v1/aircall.schema.json",
+  "title": "Aircall call rollup",
+  "description": "Call counts, duration and tags/dispositions. PII-free: caller names and phone numbers are dropped/hashed at extraction time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["callCount", "totalDurationSeconds", "avgDurationSeconds", "dispositions"],
+  "properties": {
+    "callCount": { "type": "integer", "minimum": 0 },
+    "totalDurationSeconds": { "type": "integer", "minimum": 0 },
+    "avgDurationSeconds": { "type": "number", "minimum": 0 },
+    "dispositions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["disposition", "count"],
+        "properties": {
+          "disposition": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

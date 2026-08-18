@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context-tooling.invalid/schemas/v1/converge.schema.json",
+  "title": "Converge attribution rollup",
+  "description": "Ad spend and attributed revenue by channel. The attribution model is explicit so readers know which number they are looking at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attributionModel", "currency", "adSpend", "attributedRevenue", "blendedRoas", "byChannel"],
+  "properties": {
+    "attributionModel": { "type": "string", "enum": ["blended", "last-click", "first-click", "linear"] },
+    "currency": { "type": "string", "enum": ["USD"] },
+    "adSpend": { "type": "number" },
+    "attributedRevenue": { "type": "number" },
+    "blendedRoas": { "type": "number" },
+    "byChannel": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["channel", "spend", "attributedRevenue", "roas"],
+        "properties": {
+          "channel": { "type": "string" },
+          "spend": { "type": "number" },
+          "attributedRevenue": { "type": "number" },
+          "roas": { "type": "number" }
+        }
+      }
+    }
+  }
+}

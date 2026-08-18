@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context-tooling.invalid/schemas/v1/shopify.schema.json",
+  "title": "Shopify weekly rollup",
+  "description": "Weekly orders, revenue, units by SKU, product/variant catalog and refunds. No customer PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["orders", "unitsBySku", "catalog", "refunds"],
+  "properties": {
+    "orders": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "revenue", "units"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "revenue": { "type": "number" },
+        "units": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "unitsBySku": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sku", "units", "revenue"],
+        "properties": {
+          "sku": { "type": "string" },
+          "units": { "type": "integer", "minimum": 0 },
+          "revenue": { "type": "number" }
+        }
+      }
+    },
+    "catalog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sku", "title", "variantId", "productType"],
+        "properties": {
+          "sku": { "type": "string" },
+          "title": { "type": "string" },
+          "variantId": { "type": "string" },
+          "productType": { "type": "string" }
+        }
+      }
+    },
+    "refunds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "amount"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "amount": { "type": "number" }
+      }
+    }
+  }
+}

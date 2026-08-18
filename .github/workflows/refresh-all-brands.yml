@@ -1,0 +1,79 @@
+name: refresh-all-brands
+
+# Matrix over brands. This is the single scheduled entry point: one code path
+# dispatches every brand repo's `refresh-context` workflow. Each brand repo keeps
+# its own access control (Option B), so nothing about the pipeline changes when
+# you add a brand.
+#
+# Adding brand #4 = add ONE `include` entry below + create the brand repo. No
+# job copy-paste.
+#
+# How it works: each matrix job POSTs a `workflow_dispatch` to
+# `brand-<brand>` via `gh api` so the brand repo's reusable workflow runs there
+# (with that repo's own secrets). Requires a PAT or GitHub App token with
+# `workflow` scope on every brand repo, stored as the `BRAND_DISPATCH_TOKEN`
+# secret in this repo.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # every Monday 06:00 UTC — single point of truth
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: 'Sources to refresh: all | shopify,reddit,converge,richpanel,aircall'
+        required: false
+        default: 'all'
+      period:
+        description: 'ISO week to refresh (blank = current week), e.g. 2026-W33'
+        required: false
+        default: ''
+      fixture_all:
+        description: 'Run live sources (shopify, reddit) in fixture mode too (no live keys)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - brand: nanorevive
+            repo: brand-nanorevive
+          - brand: pawprint-lab
+            repo: brand-pawprint-lab
+          - brand: saunastack
+            repo: brand-saunastack
+    steps:
+      - name: Dispatch refresh to ${{ matrix.repo }}
+        # A missing brand repo (or an untriggerable workflow) must not block the
+        # other brands; the summary below still shows the failure.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.BRAND_DISPATCH_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo }}
+          SOURCES: ${{ inputs.sources || 'all' }}
+          PERIOD: ${{ inputs.period || '' }}
+          FIXTURE_ALL: ${{ inputs.fixture_all || false }}
+        run: |
+          jq -nc --arg sources "$SOURCES" --arg period "$PERIOD" --argjson fixture "$FIXTURE_ALL" \
+            '{ref: "main", inputs: {sources: $sources, period: $period, fixture_all: $fixture}}' \
+            | gh api --method POST -H "Accept: application/vnd.github+json" \
+                "/repos/${OWNER}/${REPO}/actions/workflows/refresh-context.yml/dispatches" \
+                --input - \
+            >/dev/null
+          echo "dispatched ${OWNER}/${REPO} (sources=$SOURCES period=${PERIOD:-current} fixture_all=$FIXTURE_ALL)"
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## ${{ matrix.repo }}"
+            echo ""
+            echo "- sources: ${{ inputs.sources || 'all' }}"
+            echo "- period: ${{ inputs.period || 'current week' }}"
+            echo "- fixture_all: ${{ inputs.fixture_all || false }}"
+          } >> "$GITHUB_STEP_SUMMARY"

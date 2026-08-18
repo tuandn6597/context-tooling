@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context-tooling.invalid/schemas/v1/richpanel.schema.json",
+  "title": "Richpanel support rollup",
+  "description": "Ticket volume, tags and top complaint themes by week. PII-free: customer names, emails and phone numbers are dropped/hashed at extraction time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ticketVolume", "topTags", "topThemes"],
+  "properties": {
+    "ticketVolume": { "type": "integer", "minimum": 0 },
+    "topTags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tag", "count"],
+        "properties": {
+          "tag": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "topThemes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["theme", "count"],
+        "properties": {
+          "theme": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}
