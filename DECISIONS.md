@@ -24,10 +24,12 @@ workflow (`workflow_call`). Why:
 - `context-tooling` is versioned and tagged (`@v1`, `@main`); brand repos pin to a
   tag so a breaking extractor change doesn't silently hit all brands.
 
-**Cost of adding brand #4:** create one repo from a template (the brand repo is
-~5 files + a ~15-line workflow), add one `data/` seed, grant collaborators. No
-new job code — the reusable workflow is the single code path. ~30 minutes, zero
-copy-paste of pipeline logic.
+**Cost of adding brand #4:** add one `include` entry to the matrix in
+`refresh-all-brands.yml`, then create the brand repo from a template — just 3
+config files (a ~15-line dispatch-only `refresh-context.yml` caller, `.gitignore`,
+`README.md`). Grant collaborators and add the repo to the `BRAND_DISPATCH_TOKEN`
+scope. No new job code — the reusable workflow is the single code path. 2-3
+minutes, zero copy-paste of pipeline logic.
 
 **Cost of onboarding a contractor who may only see one brand:** invite them to
 that one repo only. They read `INDEX.md` -> `CONTEXT.md` -> `data/`. They can
@@ -78,6 +80,13 @@ literal matrix, so we added an **orchestrator** in `context-tooling`:
 - Property-based / golden-file tests for `stableStringify` and every extractor's
   normalize, and a `context-pack` command that assembles one LLM-sized file per
   brand + date range.
+- Move the weekly trigger off GitHub Actions `schedule` (best-effort; runs can
+  fire 15-60 min late or be skipped during high load) to an external cron
+  (Cloud Scheduler / EventBridge) that calls `workflow_dispatch`, so 05:00
+  Monday is actually 05:00 Monday — and alert when the expected run never landed.
+- Add failure notifications (Slack / email / webhook) when a source run fails or
+  a brand goes stale, so a broken night doesn't go unnoticed until someone reads
+  `INDEX.md`.
 
 ## 4. Deliberately out of scope (and why)
 
