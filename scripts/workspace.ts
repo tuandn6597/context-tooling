@@ -10,13 +10,19 @@ export function parseFlags(argv: string[]): Flags {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (!arg.startsWith('--')) continue;
-    const key = arg.slice(2);
+    const body = arg.slice(2);
+    // Support both `--key=value` and `--key value` forms.
+    const eq = body.indexOf('=');
+    if (eq !== -1) {
+      out[body.slice(0, eq)] = body.slice(eq + 1);
+      continue;
+    }
     const next = argv[i + 1];
     if (next && !next.startsWith('--')) {
-      out[key] = next;
+      out[body] = next;
       i++;
     } else {
-      out[key] = true;
+      out[body] = true;
     }
   }
   return out;
