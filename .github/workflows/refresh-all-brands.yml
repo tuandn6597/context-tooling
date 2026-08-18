@@ -16,7 +16,7 @@ name: refresh-all-brands
 
 on:
   schedule:
-    - cron: '0 10 * * *' # every day 10:00 UTC (17:00 Vietnam, UTC+7)
+    - cron: '0 22 * * 0' # every Monday 05:00 Vietnam (22:00 UTC Sunday, UTC+7)
   workflow_dispatch:
     inputs:
       sources:

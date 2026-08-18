@@ -42,7 +42,7 @@ literal matrix, so we added an **orchestrator** in `context-tooling`:
 
 - `.github/workflows/refresh-all-brands.yml` holds a real
   `strategy.matrix.include` over the three brands and is the **single scheduled
-  entry point** (`0 6 * * 1`).
+  entry point** (`0 22 * * 0` UTC = Monday 05:00 Vietnam).
 - Each matrix job dispatches `workflow_dispatch` to that brand's own repo
   (`brand-nanorevive`, ...) via `gh api`, so the reusable workflow still runs in
   the brand repo with that repo's own secrets. Access control stays Option B.
