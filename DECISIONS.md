@@ -52,8 +52,8 @@ literal matrix, so we added an **orchestrator** in `context-tooling`:
   so a week isn't refreshed twice; manual per-brand runs still work.
 - Cost: one `BRAND_DISPATCH_TOKEN` secret (PAT or GitHub App with `workflow`
   scope on all brand repos) in `context-tooling`. A missing/unreachable brand
-  repo is `continue-on-error` and surfaced in the job summary, not fatal to the
-  other brands.
+  repo is `continue-on-error` so it never blocks the other brands, but a gate
+  step then fails that matrix job so the run turns red instead of hiding it.
 
 ## 2. Schema versioning
 

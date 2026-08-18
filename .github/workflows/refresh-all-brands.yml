@@ -48,8 +48,10 @@ jobs:
             repo: brand-saunastack
     steps:
       - name: Dispatch refresh to ${{ matrix.repo }}
+        id: dispatch
         # A missing brand repo (or an untriggerable workflow) must not block the
-        # other brands; the summary below still shows the failure.
+        # other brands; the gate step below still fails the run so the red state
+        # is not hidden.
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.BRAND_DISPATCH_TOKEN }}
@@ -66,6 +68,12 @@ jobs:
                 --input - \
             >/dev/null
           echo "dispatched ${OWNER}/${REPO} (sources=$SOURCES period=${PERIOD:-current} fixture_all=$FIXTURE_ALL)"
+
+      - name: Fail run if dispatch failed
+        if: always() && steps.dispatch.outcome == 'failure'
+        run: |
+          echo "::error::Dispatch to ${{ matrix.repo }} failed (is the repo created and the token allowed?)"
+          exit 1
 
       - name: Write job summary
         if: always()

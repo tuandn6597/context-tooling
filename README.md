@@ -46,7 +46,8 @@ matrix over brands and dispatches each brand repo's `refresh-context` workflow:
 - Brand repos must live under the same owner/org as `context-tooling`.
 - Requires a `BRAND_DISPATCH_TOKEN` secret here (PAT or GitHub App with
   `workflow` scope on all brand repos). Brand repos stay dispatch-only so a week
-  isn't refreshed twice; they can still be run manually per brand.
+  isn't refreshed twice; they can still be run manually per brand. A failed
+  dispatch doesn't block other brands but fails that matrix job (run turns red).
 
 ## Non-negotiables enforced here
 
